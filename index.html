@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IPT Chatbot</title>
+    <style>
+        /* Basic Reset */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #1e1e2f;
+            color: #f7f7f7;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        /* Chat Container */
+        .chat-container {
+            background-color: #2a2b3d;
+            width: 100%;
+            max-width: 600px;
+            height: 75vh;
+            border-radius: 15px;
+            box-shadow: 0px 10px 30px rgba(0, 0, 0, 0.2);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chat-header {
+            background-color: #0d6efd;
+            color: #ffffff;
+            text-align: center;
+            padding: 20px;
+            font-size: 1.5em;
+            border-top-left-radius: 15px;
+            border-top-right-radius: 15px;
+        }
+
+        /* Chat Box */
+        .chat-box {
+            overflow-y: auto;
+            padding: 20px;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            max-height: 100%;
+            scrollbar-color: #888 #2a2b3d;
+        }
+
+        .user-message,
+        .bot-message {
+            max-width: 80%;
+            padding: 12px 18px;
+            border-radius: 20px;
+            line-height: 1.5;
+            font-size: 1.1em;
+            word-wrap: break-word;
+            display: inline-block;
+            margin-bottom: 10px;
+            width: fit-content;
+            position: relative;
+            border: 1px solid #3c3f5a;
+        }
+
+        .user-message {
+            background-color: #0d6efd;
+            color: white;
+            align-self: flex-end;
+            border-top-right-radius: 0;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .bot-message {
+            background-color: #2a2b3d;
+            color: #f7f7f7;
+            align-self: flex-start;
+            border-top-left-radius: 0;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Input Area */
+        .input-container {
+            display: flex;
+            padding: 15px;
+            background-color: #3c3f5a;
+            border-bottom-left-radius: 15px;
+            border-bottom-right-radius: 15px;
+        }
+
+        #user-input {
+            flex-grow: 1;
+            padding: 12px;
+            border-radius: 20px;
+            font-size: 1em;
+            background-color: #ffffff;
+            color: #333;
+            border: none;
+            outline: none;
+            transition: background-color 0.3s ease;
+        }
+
+        #user-input:focus {
+            background-color: #e7f1ff;
+        }
+
+        #send-button {
+            background-color: #0d6efd;
+            color: #ffffff;
+            padding: 14px 18px;
+            border-radius: 20px;
+            font-size: 1em;
+            cursor: pointer;
+            border: none;
+            margin-left: 10px;
+            transition: background-color 0.3s ease;
+        }
+
+        #send-button:hover {
+            background-color: #08429f;
+        }
+
+        /* Scrollbar styling */
+        .chat-box::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .chat-box::-webkit-scrollbar-thumb {
+            background-color: #555;
+            border-radius: 10px;
+        }
+
+        .chat-box::-webkit-scrollbar-track {
+            background-color: #2a2b3d;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .chat-container {
+                width: 90%;
+                margin-top: 10px;
+            }
+
+            .chat-header {
+                font-size: 1.2em;
+            }
+
+            .input-container {
+                padding: 12px;
+            }
+
+            #user-input {
+                font-size: 0.9em;
+                padding: 10px;
+            }
+
+            #send-button {
+                font-size: 0.9em;
+                padding: 10px 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="chat-container">
+        <div class="chat-header">
+            IPT Chatbot
+        </div>
+        <div class="chat-box" id="chat-box"></div>
+        <div class="input-container">
+            <textarea id="user-input" placeholder="Ask me anything related to programming and technology..." rows="1"></textarea>
+            <button id="send-button" onclick="sendMessage()">Send</button>
+        </div>
+    </div>
+
+    <script>
+        function sendMessage() {
+            const userInput = document.getElementById("user-input").value;
+            const chatBox = document.getElementById("chat-box");
+
+            if (!userInput.trim()) return;
+
+            // Display user message
+            const userMessageDiv = document.createElement("div");
+            userMessageDiv.classList.add("user-message");
+            userMessageDiv.textContent = userInput;
+            chatBox.appendChild(userMessageDiv);
+
+            // Clear the input field
+            document.getElementById("user-input").value = "";
+
+            // Scroll to the bottom of the chat box
+            chatBox.scrollTop = chatBox.scrollHeight;
+
+            // Send the message to the server and get the response
+            fetch("/chat", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ message: userInput })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.response) {
+                    const botMessageDiv = document.createElement("div");
+                    botMessageDiv.classList.add("bot-message");
+                    botMessageDiv.textContent = data.response;
+                    chatBox.appendChild(botMessageDiv);
+                } else {
+                    const botMessageDiv = document.createElement("div");
+                    botMessageDiv.classList.add("bot-message");
+                    botMessageDiv.textContent = "Sorry, something went wrong. Please try again.";
+                    chatBox.appendChild(botMessageDiv);
+                }
+
+                // Scroll to the bottom of the chat box
+                chatBox.scrollTop = chatBox.scrollHeight;
+            })
+            .catch(error => {
+                const botMessageDiv = document.createElement("div");
+                botMessageDiv.classList.add("bot-message");
+                botMessageDiv.textContent = "Error communicating with the server. Please try again.";
+                chatBox.appendChild(botMessageDiv);
+                chatBox.scrollTop = chatBox.scrollHeight;
+            });
+        }
+
+        // Adjust textarea height automatically
+        document.getElementById("user-input").addEventListener("input", function () {
+            this.style.height = "auto";
+            this.style.height = (this.scrollHeight) + "px";
+        });
+    </script>
+
+</body>
+</html>
